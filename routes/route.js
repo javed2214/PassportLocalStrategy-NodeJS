@@ -1,10 +1,23 @@
 const express = require('express')
 const router = express.Router()
-const passport = require('passport')
 const mongoose = require('mongoose')
 const User = mongoose.model('User')
-
+const passport = require('passport')
 const bcrypt = require('bcrypt')
+
+checkAuthenticated = (req, res, next) =>{
+    if(req.isAuthenticated()){
+        return next()
+    }
+    res.redirect('/login')
+}
+
+checkNotAuthenticated = (req, res, next) => {
+    if(req.isAuthenticated()){
+        return res.redirect('/profile')
+    }
+    next()
+}
 
 router.get('/', checkAuthenticated, (req, res) => {
     res.render('index')
@@ -18,7 +31,6 @@ router.post('/register', checkNotAuthenticated, async (req, res) => {
     var user = new User()
     user.username = req.body.username
     user.email = req.body.email
-
     var hashedPassword = await bcrypt.hash(req.body.password, 10)
     user.password = hashedPassword
 
@@ -44,19 +56,5 @@ router.get('/logout', (req, res) => {
     req.logout()
     res.redirect('/login')
 })
-
-function checkAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next()
-    }
-    res.redirect('/login')
-  }
-  
-  function checkNotAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return res.redirect('/profile')
-    }
-    next()
-  }
 
 module.exports = router
